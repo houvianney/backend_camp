@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ADMIN_SECONDARY
+  RESPONSABLE
+  CONTROLEUR
+}
+
+enum ControleType {
+  PRESENCE
+  TSHIRT
+  NOURRITURE
+}
+
+enum TypeParticipant {
+  PARTICIPANT
+  STAFF
+  ENSEIGNANT
+}
+
+enum StatutParticipant {
+  EN_ATTENTE
+  VALIDE
+}
+
+enum StatutBadge {
+  ACTIF
+  REVOQUE
+}
+
+model Localite {
+  id          String   @id @default(cuid())
+  nom         String
+  description String?
+  createdAt   DateTime @default(now())
+
+  users        User[]
+  participants Participant[]
+}
+
+model User {
+  id           String        @id @default(cuid())
+  nom          String
+  prenom       String
+  email        String        @unique
+  telephone    String?
+  passwordHash String
+  role         Role
+  controleType ControleType?
+  localiteId   String?
+  localite     Localite?     @relation(fields: [localiteId], references: [id])
+  actif        Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+
+  participantsInscrits Participant[]  @relation("InscritPar")
+  participantsValides  Participant[]  @relation("ValidePar")
+  badgesRevoques       Badge[]        @relation("RevoquePar")
+  distributions        Distribution[]
+
+  @@index([role])
+}
+
+model Participant {
+  id               String            @id @default(cuid())
+  nom              String
+  prenom           String
+  telephone        String?
+  email            String?
+  sexe             String?
+  age              Int?
+  profession       String?
+  adresse          String?
+  contact          String?
+  membreOng        Boolean?          @default(false)
+  typeParticipant  TypeParticipant   @default(PARTICIPANT)
+  tailleTshirt     String?
+  montantTotal     Decimal           @default(0)
+  montantPaye      Decimal           @default(0)
+  statut           StatutParticipant @default(EN_ATTENTE)
+
+  localiteId String
+  localite   Localite @relation(fields: [localiteId], references: [id])
+
+  inscritParId String
+  inscritPar   User   @relation("InscritPar", fields: [inscritParId], references: [id])
+
+  valideParId String?
+  validePar   User?   @relation("ValidePar", fields: [valideParId], references: [id])
+  valideAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  badges        Badge[]
+  distributions Distribution[]
+
+  @@index([localiteId])
+  @@index([statut])
+}
+
+model Badge {
+  id            String      @id @default(cuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  qrCode        String      @unique
+  statut        StatutBadge @default(ACTIF)
+  createdAt     DateTime    @default(now())
+  revokedAt     DateTime?
+  revokedById   String?
+  revokedBy     User?       @relation("RevoquePar", fields: [revokedById], references: [id])
+
+  @@index([participantId])
+}
+
+model Ressource {
+  id      String       @id @default(cuid())
+  code    String       @unique
+  libelle String
+  type    ControleType
+  jour    Int?
+  creneau String?
+
+  distributions Distribution[]
+}
+
+model Distribution {
+  id            String      @id @default(cuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  ressourceId   String
+  ressource     Ressource   @relation(fields: [ressourceId], references: [id])
+  controleurId  String
+  controleur    User        @relation(fields: [controleurId], references: [id])
+  scannedAt     DateTime    @default(now())
+
+  // Coeur anti-fraude: un participant ne peut recevoir une ressource donnee qu'une seule fois.
+  // Nomme explicitement car reference dans DistributionsService (P2002 -> findUnique).
+  @@unique([participantId, ressourceId], name: "uniq_participant_ressource")
+}
+
+model ProgrammeItem {
+  id          String  @id @default(cuid())
+  jour        Int
+  heureDebut  String
+  heureFin    String?
+  titre       String
+  lieu        String?
+  description String?
+}
+
+model Album {
+  id       String  @id @default(cuid())
+  titre    String
+  jour     Int?
+  activite String?
+  createdAt DateTime @default(now())
+
+  photos Photo[]
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  albumId   String
+  album     Album    @relation(fields: [albumId], references: [id])
+  url       String
+  createdAt DateTime @default(now())
+
+  @@index([albumId])
+}

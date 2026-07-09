@@ -1,0 +1,12 @@
+export enum Role {
+  ADMIN = 'ADMIN',
+  ADMIN_SECONDARY = 'ADMIN_SECONDARY',
+  RESPONSABLE = 'RESPONSABLE',
+  CONTROLEUR = 'CONTROLEUR',
+}
+
+export enum ControleType {
+  PRESENCE = 'PRESENCE',
+  TSHIRT = 'TSHIRT',
+  NOURRITURE = 'NOURRITURE',
+}
