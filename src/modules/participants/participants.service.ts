@@ -19,6 +19,7 @@ interface CreateParticipantInput {
   tailleTshirt?: string;
   montantTotal: number;
   montantPaye: number;
+  localiteId?: string;
 }
 
 @Injectable()
@@ -30,9 +31,25 @@ export class ParticipantsService {
 
   /** Le responsable inscrit un participant de SA localité uniquement */
   async inscrireParResponsable(responsableId: string, data: CreateParticipantInput) {
+    // If called by admin, responsableId will be admin id; handle in controller by passing role if needed
     const responsable = await this.prisma.user.findUnique({ where: { id: responsableId } });
-    if (!responsable || responsable.role !== 'RESPONSABLE' || !responsable.localiteId) {
-      throw new ForbiddenException('Compte responsable invalide');
+    if (!responsable) {
+      throw new ForbiddenException('Compte invalide');
+    }
+
+    // If caller is RESPONSABLE, ensure they have a localite and ignore any provided localiteId
+    const callerRole = (responsable.role || '').toString();
+    let localiteForParticipant = responsable.localiteId;
+    if (callerRole === 'RESPONSABLE') {
+      if (!responsable.localiteId) throw new ForbiddenException('Compte responsable invalide');
+    } else if (callerRole === 'ADMIN') {
+      if (!data.localiteId) throw new BadRequestException('localiteId requis pour création par admin');
+      if (!data.nom || !data.prenom || !data.contact || !data.sexe || !data.typeParticipant) {
+        throw new BadRequestException('Nom, prénom, sexe, contact et type sont obligatoires pour la création par admin.');
+      }
+      localiteForParticipant = data.localiteId;
+    } else {
+      throw new ForbiddenException('Droits insuffisants');
     }
 
     if (data.typeParticipant === 'STAFF' && !data.typeStaff) {
@@ -41,15 +58,23 @@ export class ParticipantsService {
 
     const participantData: Prisma.ParticipantUncheckedCreateInput = {
       ...data,
-      localiteId: responsable.localiteId,
+      localiteId: localiteForParticipant as string,
       inscritParId: responsable.id,
-      statut: 'EN_ATTENTE',
+      statut: callerRole === 'ADMIN' ? 'VALIDE' : 'EN_ATTENTE',
+      valideParId: callerRole === 'ADMIN' ? responsable.id : undefined,
+      valideAt: callerRole === 'ADMIN' ? new Date() : undefined,
       typeStaff: data.typeParticipant === 'STAFF' ? data.typeStaff : undefined,
     };
 
-    return this.prisma.participant.create({
+    const participant = await this.prisma.participant.create({
       data: participantData,
     });
+
+    if (callerRole === 'ADMIN') {
+      await this.badgesService.genererBadge(participant.id);
+    }
+
+    return participant;
   }
 
   /** Le responsable met à jour le montant payé par tranche, uniquement si encore EN_ATTENTE */
@@ -88,12 +113,21 @@ export class ParticipantsService {
     }
   }
 
-  async supprimerParResponsable(responsableId: string, participantId: string) {
+  async supprimerParResponsable(responsableId: string, participantId: string, callerRole?: string) {
     const participant = await this.prisma.participant.findUnique({ where: { id: participantId } });
     if (!participant) throw new NotFoundException('Participant introuvable');
 
-    const responsable = await this.prisma.user.findUnique({ where: { id: responsableId } });
-    if (participant.localiteId !== responsable?.localiteId) {
+    const caller = await this.prisma.user.findUnique({ where: { id: responsableId } });
+    if (!caller) throw new ForbiddenException('Compte invalide');
+
+    // Admin can delete any participant. Responsable only if same localite and still EN_ATTENTE
+    if (caller.role === 'ADMIN' || callerRole === 'ADMIN') {
+      await this.prisma.distribution.deleteMany({ where: { participantId } });
+      await this.prisma.badge.deleteMany({ where: { participantId } });
+      return this.prisma.participant.delete({ where: { id: participantId } });
+    }
+
+    if (participant.localiteId !== caller?.localiteId) {
       throw new ForbiddenException("Ce participant n'appartient pas à votre localité");
     }
     if (participant.statut !== 'EN_ATTENTE') {
@@ -103,6 +137,25 @@ export class ParticipantsService {
     await this.prisma.distribution.deleteMany({ where: { participantId } });
     await this.prisma.badge.deleteMany({ where: { participantId } });
     return this.prisma.participant.delete({ where: { id: participantId } });
+  }
+
+  /** Mettre à jour un participant par le responsable (sa localité) ou par l'admin */
+  async mettreAJourParticipant(user: any, participantId: string, data: Partial<CreateParticipantInput>) {
+    const participant = await this.prisma.participant.findUnique({ where: { id: participantId } });
+    if (!participant) throw new NotFoundException('Participant introuvable');
+
+    const caller = await this.prisma.user.findUnique({ where: { id: user.id } });
+    if (!caller) throw new ForbiddenException('Compte invalide');
+
+    if (caller.role === 'RESPONSABLE') {
+      if (participant.localiteId !== caller.localiteId) throw new ForbiddenException("Ce participant n'appartient pas à votre localité");
+      if (participant.statut !== 'EN_ATTENTE') throw new BadRequestException('Ce participant est déjà validé, modification impossible');
+    }
+
+    const allowed: any = { ...data };
+    delete allowed.statut;
+
+    return this.prisma.participant.update({ where: { id: participantId }, data: allowed as any });
   }
 
   /** Vue admin: liste globale, filtrable par statut/localité */

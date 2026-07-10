@@ -20,6 +20,7 @@ class CreateParticipantDto {
   @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT', 'VOLONTAIRE']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
   @IsOptional() @IsIn(['Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
   @IsOptional() @IsString() tailleTshirt?: string;
+  @IsOptional() @IsString() localiteId?: string;
   @IsNumber() @Min(0) montantTotal: number;
   @IsNumber() @Min(0) montantPaye: number;
 }
@@ -32,6 +33,25 @@ class ValiderPlusieursDto {
   @IsString({ each: true }) participantIds: string[];
 }
 
+class UpdateParticipantDto {
+  @IsOptional() @IsString() nom?: string;
+  @IsOptional() @IsString() prenom?: string;
+  @IsOptional() @IsString() telephone?: string;
+  @IsOptional() @IsEmail() email?: string;
+  @IsOptional() @IsIn(['M', 'F']) sexe?: 'M' | 'F';
+  @IsOptional() @IsNumber() @Min(0) age?: number;
+  @IsOptional() @IsString() profession?: string;
+  @IsOptional() @IsString() adresse?: string;
+  @IsOptional() @IsString() contact?: string;
+  @IsOptional() @IsBoolean() membreOng?: boolean;
+  @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT', 'VOLONTAIRE']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
+  @IsOptional() @IsIn(['Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
+  @IsOptional() @IsString() tailleTshirt?: string;
+  @IsOptional() @IsString() localiteId?: string;
+  @IsOptional() @IsNumber() @Min(0) montantTotal?: number;
+  @IsOptional() @IsNumber() @Min(0) montantPaye?: number;
+}
+
 @Controller('participants')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ParticipantsController {
@@ -40,8 +60,9 @@ export class ParticipantsController {
   // --- Responsable de localité ---
 
   @Post()
-  @Roles(Role.RESPONSABLE)
+  @Roles(Role.RESPONSABLE, Role.ADMIN)
   inscrire(@Body() dto: CreateParticipantDto, @Req() req: any) {
+    // If admin creates, they should provide localiteId in dto; responsable will have theirs used in service
     return this.participantsService.inscrireParResponsable(req.user.id, dto);
   }
 
@@ -58,9 +79,15 @@ export class ParticipantsController {
   }
 
   @Delete(':id')
-  @Roles(Role.RESPONSABLE)
+  @Roles(Role.RESPONSABLE, Role.ADMIN)
   supprimer(@Param('id') id: string, @Req() req: any) {
-    return this.participantsService.supprimerParResponsable(req.user.id, id);
+    return this.participantsService.supprimerParResponsable(req.user.id, id, req.user.role);
+  }
+
+  @Patch(':id')
+  @Roles(Role.RESPONSABLE, Role.ADMIN)
+  updateParticipant(@Param('id') id: string, @Body() dto: UpdateParticipantDto, @Req() req: any) {
+    return this.participantsService.mettreAJourParticipant(req.user, id, dto);
   }
 
   // --- Admin ---
