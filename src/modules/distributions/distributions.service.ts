@@ -57,6 +57,8 @@ export class DistributionsService {
         id: badge.participant.id,
         nom: badge.participant.nom,
         prenom: badge.participant.prenom,
+        sexe: badge.participant.sexe,
+        typeParticipant: badge.participant.typeParticipant,
         tailleTshirt: badge.participant.tailleTshirt,
       },
       typeControle: controleur.controleType,

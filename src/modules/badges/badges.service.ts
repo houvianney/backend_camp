@@ -99,6 +99,8 @@ export class BadgesService {
     return {
       nom: participant.nom,
       prenom: participant.prenom,
+      sexe: participant.sexe,
+      typeParticipant: participant.typeParticipant,
       statut: participant.statut,
       tailleTshirt: participant.tailleTshirt,
       ressourcesRecues: participant.distributions.map((d) => ({
