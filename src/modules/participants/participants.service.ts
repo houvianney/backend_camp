@@ -1,4 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BadgesService } from '../badges/badges.service';
 
@@ -13,7 +14,8 @@ interface CreateParticipantInput {
   adresse?: string;
   contact?: string;
   membreOng?: boolean;
-  typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT';
+  typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
+  typeStaff?: 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
   tailleTshirt?: string;
   montantTotal: number;
   montantPaye: number;
@@ -33,13 +35,20 @@ export class ParticipantsService {
       throw new ForbiddenException('Compte responsable invalide');
     }
 
+    if (data.typeParticipant === 'STAFF' && !data.typeStaff) {
+      throw new BadRequestException('Le type de staff est obligatoire pour les participants de type STAFF.');
+    }
+
+    const participantData: Prisma.ParticipantUncheckedCreateInput = {
+      ...data,
+      localiteId: responsable.localiteId,
+      inscritParId: responsable.id,
+      statut: 'EN_ATTENTE',
+      typeStaff: data.typeParticipant === 'STAFF' ? data.typeStaff : undefined,
+    };
+
     return this.prisma.participant.create({
-      data: {
-        ...data,
-        localiteId: responsable.localiteId,
-        inscritParId: responsable.id,
-        statut: 'EN_ATTENTE',
-      },
+      data: participantData,
     });
   }
 
@@ -67,10 +76,16 @@ export class ParticipantsService {
 
   /** Liste des participants d'une localité (vue du responsable) */
   listeParLocalite(localiteId: string) {
-    return this.prisma.participant.findMany({
-      where: { localiteId },
-      orderBy: { createdAt: 'desc' },
-    });
+    console.log('[DEBUG] listeParLocalite called with localiteId=', localiteId);
+    try {
+      return this.prisma.participant.findMany({
+        where: { localiteId },
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch (err) {
+      console.error('[DEBUG] prisma.participant.findMany error for localiteId=', localiteId, err);
+      throw err;
+    }
   }
 
   async supprimerParResponsable(responsableId: string, participantId: string) {

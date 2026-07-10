@@ -24,6 +24,7 @@ enum TypeParticipant {
   PARTICIPANT
   STAFF
   ENSEIGNANT
+  VOLONTAIRE
 }
 
 enum StatutParticipant {
@@ -81,6 +82,7 @@ model Participant {
   contact          String?
   membreOng        Boolean?          @default(false)
   typeParticipant  TypeParticipant   @default(PARTICIPANT)
+  typeStaff        String?
   tailleTshirt     String?
   montantTotal     Decimal           @default(0)
   montantPaye      Decimal           @default(0)

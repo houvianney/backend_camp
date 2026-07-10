@@ -17,7 +17,8 @@ class CreateParticipantDto {
   @IsOptional() @IsString() adresse?: string;
   @IsOptional() @IsString() contact?: string;
   @IsOptional() @IsBoolean() membreOng?: boolean;
-  @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT';
+  @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT', 'VOLONTAIRE']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
+  @IsOptional() @IsIn(['Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
   @IsOptional() @IsString() tailleTshirt?: string;
   @IsNumber() @Min(0) montantTotal: number;
   @IsNumber() @Min(0) montantPaye: number;
