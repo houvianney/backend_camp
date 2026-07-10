@@ -1,9 +1,11 @@
-import { ConflictException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class DistributionsService {
+  private readonly logger = new Logger(DistributionsService.name);
+
   constructor(private prisma: PrismaService) {}
 
   /**
@@ -13,15 +15,19 @@ export class DistributionsService {
    * (un controleur "TSHIRT" ne doit voir que l'info tshirt, etc.)
    */
   async lookupByQrCode(qrCode: string, controleurId: string) {
+    this.logger.log(`[SCAN] lookup start qrCode=${qrCode} controleurId=${controleurId}`);
+
     const badge = await this.prisma.badge.findUnique({
       where: { qrCode },
       include: { participant: true },
     });
 
     if (!badge || badge.statut !== 'ACTIF') {
+      this.logger.warn(`[SCAN] lookup failed qrCode=${qrCode} reason=badge_not_found_or_revoked`);
       throw new NotFoundException('QR code invalide ou révoqué');
     }
     if (badge.participant.statut !== 'VALIDE') {
+      this.logger.warn(`[SCAN] lookup failed qrCode=${qrCode} participantId=${badge.participant.id} reason=participant_not_validated`);
       throw new BadRequestException("Ce participant n'est pas encore validé par l'admin");
     }
 
@@ -44,6 +50,7 @@ export class DistributionsService {
     });
 
     const dejaConsomme = new Set(distributionsExistantes.map((d) => d.ressourceId));
+    this.logger.log(`[SCAN] lookup success participantId=${badge.participant.id} typeControle=${controleur.controleType} resources=${ressources.length}`);
 
     return {
       participant: {
@@ -70,6 +77,8 @@ export class DistributionsService {
    * même si deux scans arrivent au même moment sur deux postes différents.
    */
   async valider(participantId: string, ressourceId: string, controleurId: string) {
+    this.logger.log(`[VALIDATE] attempt controllerId=${controleurId} participantId=${participantId} ressourceId=${ressourceId}`);
+
     const controleur = await this.prisma.user.findUnique({ where: { id: controleurId } });
     if (!controleur || controleur.role !== 'CONTROLEUR') {
       throw new BadRequestException('Compte contrôleur invalide');
@@ -77,6 +86,7 @@ export class DistributionsService {
 
     const ressource = await this.prisma.ressource.findUnique({ where: { id: ressourceId } });
     if (!ressource || !controleur.controleType || ressource.type !== controleur.controleType) {
+      this.logger.warn(`[VALIDATE] rejected controllerId=${controleurId} participantId=${participantId} ressourceId=${ressourceId} reason=resource_type_mismatch`);
       throw new BadRequestException('Cette ressource ne correspond pas au type de contrôle de ce compte');
     }
 
@@ -84,6 +94,7 @@ export class DistributionsService {
       const distribution = await this.prisma.distribution.create({
         data: { participantId, ressourceId, controleurId },
       });
+      this.logger.log(`[VALIDATE] success controllerId=${controleurId} participantId=${participantId} ressourceId=${ressourceId}`);
       return { success: true, distribution };
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -92,6 +103,7 @@ export class DistributionsService {
           where: { uniq_participant_ressource: { participantId, ressourceId } } as any,
           include: { controleur: true },
         });
+        this.logger.warn(`[VALIDATE] duplicate controllerId=${controleurId} participantId=${participantId} ressourceId=${ressourceId}`);
         throw new ConflictException(
           existante
             ? `Déjà remis le ${existante.scannedAt.toLocaleString('fr-FR')} par ${existante.controleur.prenom} ${existante.controleur.nom}`
