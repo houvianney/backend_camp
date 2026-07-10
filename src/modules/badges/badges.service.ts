@@ -49,9 +49,16 @@ export class BadgesService {
     });
   }
 
+  private buildQrUrl(qrCode: string) {
+    const frontendUrl = process.env.FRONTEND_URL || process.env.BACKEND_URL || 'http://localhost:3000';
+    const cleanUrl = frontendUrl.replace(/\/+$/i, '');
+    return `${cleanUrl}/participant/${qrCode}`;
+  }
+
   /** Génère l'image PNG (data URL) du QR code, à imprimer sur le badge PDF */
   async genererImageQr(qrCode: string): Promise<string> {
-    return QRCode.toDataURL(qrCode, { margin: 1, width: 300 });
+    const url = this.buildQrUrl(qrCode);
+    return QRCode.toDataURL(url, { margin: 1, width: 300 });
   }
 
   historique(participantId: string) {
