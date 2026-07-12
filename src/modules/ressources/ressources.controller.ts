@@ -36,6 +36,12 @@ export class RessourcesController {
     return this.ressourcesService.statsDistribution();
   }
 
+  @Get(':id/participants')
+  @Roles(Role.ADMIN)
+  participants(@Param('id') id: string) {
+    return this.ressourcesService.participantsParRessource(id);
+  }
+
   @Delete(':id')
   @Roles(Role.ADMIN)
   delete(@Param('id') id: string) {

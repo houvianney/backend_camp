@@ -31,6 +31,41 @@ export class RessourcesService {
     }));
   }
 
+  async participantsParRessource(ressourceId: string) {
+    const distributions = await this.prisma.distribution.findMany({
+      where: { ressourceId },
+      include: {
+        participant: {
+          include: { localite: true },
+        },
+      },
+      orderBy: { scannedAt: 'asc' },
+    });
+
+    return distributions.map((distribution) => ({
+      id: distribution.participant.id,
+      nom: distribution.participant.nom,
+      prenom: distribution.participant.prenom,
+      sexe: distribution.participant.sexe,
+      age: distribution.participant.age,
+      profession: distribution.participant.profession,
+      adresse: distribution.participant.adresse,
+      contact: distribution.participant.contact,
+      telephone: distribution.participant.telephone,
+      email: distribution.participant.email,
+      membreOng: distribution.participant.membreOng,
+      typeParticipant: distribution.participant.typeParticipant,
+      typeStaff: distribution.participant.typeStaff,
+      montantTotal: distribution.participant.montantTotal,
+      montantPaye: distribution.participant.montantPaye,
+      statut: distribution.participant.statut,
+      localite: distribution.participant.localite,
+      inscritParId: distribution.participant.inscritParId,
+      valideParId: distribution.participant.valideParId,
+      scannedAt: distribution.scannedAt,
+    }));
+  }
+
   async delete(id: string) {
     await this.prisma.distribution.deleteMany({ where: { ressourceId: id } });
     return this.prisma.ressource.delete({ where: { id } });
