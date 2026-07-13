@@ -48,6 +48,13 @@ export class AlbumsController {
     return this.albumsService.deletePhoto(id, photoId);
   }
 
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  supprimerAlbum(@Param('id') id: string) {
+    return this.albumsService.deleteAlbum(id);
+  }
+
   @Get()
   findAll() {
     // accessible publiquement aux participants via leur lien / QR

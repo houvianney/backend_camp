@@ -78,4 +78,18 @@ export class AlbumsService {
 
     return this.prisma.photo.delete({ where: { id: photoId } });
   }
+
+  async deleteAlbum(albumId: string) {
+    const album = await this.prisma.album.findUnique({ where: { id: albumId } });
+    if (!album) {
+      throw new Error('Album introuvable');
+    }
+
+    const uploadDir = process.env.UPLOAD_DIR || './uploads';
+    const albumDir = path.resolve(uploadDir, 'albums', albumId);
+    await fs.rm(albumDir, { recursive: true, force: true }).catch(() => undefined);
+
+    await this.prisma.photo.deleteMany({ where: { albumId } });
+    return this.prisma.album.delete({ where: { id: albumId } });
+  }
 }
