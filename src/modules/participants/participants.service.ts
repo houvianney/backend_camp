@@ -15,7 +15,7 @@ interface CreateParticipantInput {
   contact?: string;
   membreOng?: boolean;
   typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
-  typeStaff?: 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
+  typeStaff?: 'Entretien' | 'Podium' | 'Formateur Académie' | 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
   tailleTshirt?: string;
   montantTotal: number;
   montantPaye: number;

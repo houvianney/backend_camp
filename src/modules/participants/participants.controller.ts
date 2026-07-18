@@ -18,7 +18,7 @@ class CreateParticipantDto {
   @IsOptional() @IsString() contact?: string;
   @IsOptional() @IsBoolean() membreOng?: boolean;
   @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT', 'VOLONTAIRE']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
-  @IsOptional() @IsIn(['Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
+  @IsOptional() @IsIn(['Entretien', 'Podium', 'Formateur Académie', 'Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Entretien' | 'Podium' | 'Formateur Académie' | 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
   @IsOptional() @IsString() tailleTshirt?: string;
   @IsOptional() @IsString() localiteId?: string;
   @IsNumber() @Min(0) montantTotal: number;
@@ -45,7 +45,7 @@ class UpdateParticipantDto {
   @IsOptional() @IsString() contact?: string;
   @IsOptional() @IsBoolean() membreOng?: boolean;
   @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT', 'VOLONTAIRE']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
-  @IsOptional() @IsIn(['Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
+  @IsOptional() @IsIn(['Entretien', 'Podium', 'Formateur Académie', 'Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Entretien' | 'Podium' | 'Formateur Académie' | 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
   @IsOptional() @IsString() tailleTshirt?: string;
   @IsOptional() @IsString() localiteId?: string;
   @IsOptional() @IsNumber() @Min(0) montantTotal?: number;
