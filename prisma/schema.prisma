@@ -54,6 +54,7 @@ model User {
   email        String        @unique
   telephone    String?
   passwordHash String
+  passwordMustChange Boolean @default(false)
   role         Role
   controleType ControleType?
   localiteId   String?

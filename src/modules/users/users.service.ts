@@ -46,6 +46,7 @@ export class UsersService {
         email: data.email,
         telephone: data.telephone,
         passwordHash,
+        passwordMustChange: [Role.ADMIN, Role.ADMIN_SECONDARY, Role.RESPONSABLE, Role.CONTROLEUR].includes(data.role),
         role: data.role,
         localiteId: data.localiteId,
         controleType: data.controleType,

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -24,5 +24,10 @@ export class BadgesController {
   @Get('participant/:participantId/qr')
   qr(@Param('participantId') participantId: string) {
     return this.badgesService.getQrDataUrl(participantId);
+  }
+
+  @Post('anonymes/generer')
+  genererAnonymes(@Req() req: any, @Body() body: { enseignants?: number; staff?: number; participants?: number; volontaires?: number }) {
+    return this.badgesService.genererBadgesAnonymes(req.user.id, body);
   }
 }

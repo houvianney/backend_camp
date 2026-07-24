@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -79,6 +79,59 @@ export class BadgesService {
     }
 
     return this.genererImageQr(badge.qrCode);
+  }
+
+  async genererBadgesAnonymes(adminId: string, payload: { enseignants?: number; staff?: number; participants?: number; volontaires?: number }) {
+    const enseignants = Math.max(0, Number(payload.enseignants || 0));
+    const staff = Math.max(0, Number(payload.staff || 0));
+    const participants = Math.max(0, Number(payload.participants || 0));
+    const volontaires = Math.max(0, Number(payload.volontaires || 0));
+
+    if (!enseignants && !staff && !participants && !volontaires) {
+      throw new BadRequestException('Sélectionnez au moins un badge à générer');
+    }
+
+    const localite = await this.prisma.localite.findFirst();
+    if (!localite) {
+      throw new BadRequestException('Aucune localité n’est disponible pour créer les badges anonymes');
+    }
+
+    const created: Array<{ id: string; typeParticipant: string; code: string; qrDataUrl: string }> = [];
+
+    const batches = [
+      { type: 'ENSEIGNANT', count: enseignants },
+      { type: 'STAFF', count: staff },
+      { type: 'PARTICIPANT', count: participants },
+      { type: 'VOLONTAIRE', count: volontaires },
+    ] as const;
+
+    for (const batch of batches) {
+      for (let index = 0; index < batch.count; index += 1) {
+        const participant = await this.prisma.participant.create({
+          data: {
+            nom: '',
+            prenom: '',
+            contact: `ANON-${batch.type.toLowerCase()}-${index + 1}`,
+            typeParticipant: batch.type as any,
+            statut: 'VALIDE',
+            localiteId: localite.id,
+            inscritParId: adminId,
+            valideParId: adminId,
+            valideAt: new Date(),
+          },
+        });
+
+        const badge = await this.genererBadge(participant.id);
+        created.push({
+          id: participant.id,
+          typeParticipant: batch.type,
+          code: `ANON-${batch.type.substring(0, 3)}-${String(index + 1).padStart(2, '0')}`,
+          qrDataUrl: await this.genererImageQr(badge.qrCode),
+        });
+      }
+    }
+
+    return created;
   }
 
   /**

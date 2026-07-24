@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -33,10 +33,11 @@ export class AuthService {
       controleType: user.controleType,
     };
 
-    this.logger.log(`[AUTH] Login success email=${email} role=${user.role} controleType=${user.controleType ?? 'NONE'}`);
+    this.logger.log(`[AUTH] Login success email=${email} role=${user.role} controleType=${user.controleType ?? 'NONE'} requiresPasswordChange=${user.passwordMustChange}`);
 
     return {
       access_token: this.jwtService.sign(payload),
+      requiresPasswordChange: user.passwordMustChange,
       user: {
         id: user.id,
         nom: user.nom,
@@ -45,7 +46,35 @@ export class AuthService {
         role: user.role,
         localiteId: user.localiteId,
         controleType: user.controleType,
+        passwordMustChange: user.passwordMustChange,
       },
     };
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      throw new BadRequestException('L’ancien et le nouveau mot de passe sont requis, avec au moins 6 caractères');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.actif) {
+      throw new UnauthorizedException('Utilisateur introuvable');
+    }
+
+    const passwordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!passwordValid) {
+      throw new UnauthorizedException('L’ancien mot de passe est incorrect');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+        passwordMustChange: false,
+      },
+    });
+
+    return { success: true };
   }
 }
