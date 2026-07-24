@@ -29,8 +29,17 @@ export class ParticipantsService {
     private badgesService: BadgesService,
   ) {}
 
+  private async assertCanWrite(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.actif) {
+      throw new ForbiddenException('Ce compte est désactivé. Veuillez contacter l’administrateur pour retrouver l’accès.');
+    }
+  }
+
   /** Le responsable inscrit un participant de SA localité uniquement */
   async inscrireParResponsable(responsableId: string, data: CreateParticipantInput) {
+    await this.assertCanWrite(responsableId);
+
     // If called by admin, responsableId will be admin id; handle in controller by passing role if needed
     const responsable = await this.prisma.user.findUnique({ where: { id: responsableId } });
     if (!responsable) {
@@ -79,6 +88,8 @@ export class ParticipantsService {
 
   /** Le responsable met à jour le montant payé par tranche, uniquement si encore EN_ATTENTE */
   async mettreAJourMontant(responsableId: string, participantId: string, montantAjoute: number) {
+    await this.assertCanWrite(responsableId);
+
     const participant = await this.prisma.participant.findUnique({ where: { id: participantId } });
     if (!participant) throw new NotFoundException('Participant introuvable');
 
@@ -114,6 +125,8 @@ export class ParticipantsService {
   }
 
   async supprimerParResponsable(responsableId: string, participantId: string, callerRole?: string) {
+    await this.assertCanWrite(responsableId);
+
     const participant = await this.prisma.participant.findUnique({ where: { id: participantId } });
     if (!participant) throw new NotFoundException('Participant introuvable');
 
@@ -141,6 +154,8 @@ export class ParticipantsService {
 
   /** Mettre à jour un participant par le responsable (sa localité) ou par l'admin */
   async mettreAJourParticipant(user: any, participantId: string, data: Partial<CreateParticipantInput>) {
+    await this.assertCanWrite(user.id);
+
     const participant = await this.prisma.participant.findUnique({ where: { id: participantId } });
     if (!participant) throw new NotFoundException('Participant introuvable');
 

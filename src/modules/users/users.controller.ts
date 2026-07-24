@@ -38,6 +38,11 @@ export class UsersController {
     return this.usersService.desactiver(id);
   }
 
+  @Patch(':id/reactiver')
+  reactiver(@Param('id') id: string) {
+    return this.usersService.reactiver(id);
+  }
+
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.usersService.delete(id);

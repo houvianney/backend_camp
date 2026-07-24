@@ -15,8 +15,8 @@ export class AuthService {
   async login(email: string, password: string) {
     this.logger.log(`[AUTH] Login attempt email=${email}`);
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.actif) {
-      this.logger.warn(`[AUTH] Login failed email=${email} reason=user_not_found_or_inactive`);
+    if (!user) {
+      this.logger.warn(`[AUTH] Login failed email=${email} reason=user_not_found`);
       throw new UnauthorizedException('Identifiants invalides');
     }
 
@@ -31,6 +31,7 @@ export class AuthService {
       role: user.role,
       localiteId: user.localiteId,
       controleType: user.controleType,
+      actif: user.actif,
     };
 
     this.logger.log(`[AUTH] Login success email=${email} role=${user.role} controleType=${user.controleType ?? 'NONE'} requiresPasswordChange=${user.passwordMustChange}`);
@@ -38,6 +39,7 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
       requiresPasswordChange: user.passwordMustChange,
+      accountDisabled: !user.actif,
       user: {
         id: user.id,
         nom: user.nom,
@@ -46,6 +48,7 @@ export class AuthService {
         role: user.role,
         localiteId: user.localiteId,
         controleType: user.controleType,
+        actif: user.actif,
         passwordMustChange: user.passwordMustChange,
       },
     };

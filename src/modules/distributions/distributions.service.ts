@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -32,8 +32,8 @@ export class DistributionsService {
     }
 
     const controleur = await this.prisma.user.findUnique({ where: { id: controleurId } });
-    if (!controleur || controleur.role !== 'CONTROLEUR') {
-      throw new BadRequestException('Compte contrôleur invalide');
+    if (!controleur || controleur.role !== 'CONTROLEUR' || !controleur.actif) {
+      throw new ForbiddenException('Ce compte est désactivé. Veuillez contacter l’administrateur pour retrouver l’accès.');
     }
 
     // Ressources pertinentes pour le type de ce contrôleur (ex: tous les créneaux repas)
@@ -82,8 +82,8 @@ export class DistributionsService {
     this.logger.log(`[VALIDATE] attempt controllerId=${controleurId} participantId=${participantId} ressourceId=${ressourceId}`);
 
     const controleur = await this.prisma.user.findUnique({ where: { id: controleurId } });
-    if (!controleur || controleur.role !== 'CONTROLEUR') {
-      throw new BadRequestException('Compte contrôleur invalide');
+    if (!controleur || controleur.role !== 'CONTROLEUR' || !controleur.actif) {
+      throw new ForbiddenException('Ce compte est désactivé. Veuillez contacter l’administrateur pour retrouver l’accès.');
     }
 
     const ressource = await this.prisma.ressource.findUnique({ where: { id: ressourceId } });

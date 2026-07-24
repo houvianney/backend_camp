@@ -66,6 +66,10 @@ export class UsersService {
     return this.prisma.user.update({ where: { id }, data: { actif: false } });
   }
 
+  reactiver(id: string) {
+    return this.prisma.user.update({ where: { id }, data: { actif: true } });
+  }
+
   async delete(id: string) {
     const participantLinks = await this.prisma.participant.count({
       where: {
