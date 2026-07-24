@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from './prisma/prisma.module';
+import { RedisCacheService } from './common/cache/redis.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { LocalitesModule } from './modules/localites/localites.module';
@@ -11,6 +12,8 @@ import { ProgrammeModule } from './modules/programme/programme.module';
 import { AlbumsModule } from './modules/albums/albums.module';
 
 @Module({
+  providers: [RedisCacheService],
+  exports: [RedisCacheService],
   imports: [
     PrismaModule,
     AuthModule,
@@ -25,3 +28,5 @@ import { AlbumsModule } from './modules/albums/albums.module';
   ],
 })
 export class AppModule {}
+
+export { RedisCacheService };

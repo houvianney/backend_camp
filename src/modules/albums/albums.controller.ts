@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { IsArray, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -56,8 +56,8 @@ export class AlbumsController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     // accessible publiquement aux participants via leur lien / QR
-    return this.albumsService.findAllAvecPhotos();
+    return this.albumsService.findAllAvecPhotos(Number(page), Number(limit));
   }
 }

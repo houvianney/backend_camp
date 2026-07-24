@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { randomBytes } from 'crypto';
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RedisCacheService } from '../../common/cache/redis.service';
 
 @Injectable()
 export class BadgesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: RedisCacheService,
+  ) {}
 
   private genererToken(): string {
     // Token opaque (pas d'info participant lisible dans le QR)
@@ -140,6 +144,10 @@ export class BadgesService {
    * Aucune donnee sensible d'autres participants n'est jamais exposee ici.
    */
   async consulterParQr(qrCode: string) {
+    const cacheKey = `badge:${qrCode}`;
+    const cached = await this.cache.get<any>(cacheKey);
+    if (cached) return cached;
+
     const badge = await this.prisma.badge.findUnique({
       where: { qrCode },
       include: {
@@ -156,7 +164,7 @@ export class BadgesService {
     }
 
     const { participant } = badge;
-    return {
+    const payload = {
       nom: participant.nom,
       prenom: participant.prenom,
       sexe: participant.sexe,
@@ -169,5 +177,8 @@ export class BadgesService {
         recuLe: d.scannedAt,
       })),
     };
+
+    await this.cache.set(cacheKey, payload, 180);
+    return payload;
   }
 }

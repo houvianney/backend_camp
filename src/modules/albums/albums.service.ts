@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RedisCacheService } from '../../common/cache/redis.service';
 
 interface UploadedFileLike {
   originalname?: string;
@@ -11,7 +12,10 @@ interface UploadedFileLike {
 
 @Injectable()
 export class AlbumsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: RedisCacheService,
+  ) {}
 
   createAlbum(data: { titre: string; jour?: number; activite?: string }) {
     return this.prisma.album.create({ data });
@@ -58,12 +62,28 @@ export class AlbumsService {
     });
   }
 
-  /** Consultation publique (participants): albums groupés par jour/activité */
-  findAllAvecPhotos() {
-    return this.prisma.album.findMany({
-      include: { photos: true },
-      orderBy: [{ jour: 'asc' }],
-    });
+  /** Consultation publique (participants): albums groupés par jour/activité avec pagination et cache */
+  async findAllAvecPhotos(page = 1, limit = 20) {
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(50, Math.max(1, Number(limit) || 20));
+    const cacheKey = `albums:${safePage}:${safeLimit}`;
+
+    const cached = await this.cache.get<any>(cacheKey);
+    if (cached) return cached;
+
+    const [albums, total] = await Promise.all([
+      this.prisma.album.findMany({
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+        include: { photos: { orderBy: { createdAt: 'asc' }, take: 50 } },
+        orderBy: [{ jour: 'asc' }],
+      }),
+      this.prisma.album.count(),
+    ]);
+
+    const payload = { albums, total, page: safePage, limit: safeLimit };
+    await this.cache.set(cacheKey, payload, 120);
+    return payload;
   }
 
   async deletePhoto(albumId: string, photoId: string) {
