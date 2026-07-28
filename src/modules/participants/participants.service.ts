@@ -13,6 +13,7 @@ interface CreateParticipantInput {
   profession?: string;
   adresse?: string;
   contact?: string;
+  source?: string;
   membreOng?: boolean;
   typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
   typeStaff?: 'Entretien' | 'Podium' | 'Formateur Académie' | 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';

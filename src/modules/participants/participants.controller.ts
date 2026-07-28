@@ -16,6 +16,7 @@ class CreateParticipantDto {
   @IsOptional() @IsString() profession?: string;
   @IsOptional() @IsString() adresse?: string;
   @IsOptional() @IsString() contact?: string;
+  @IsOptional() @IsString() source?: string;
   @IsOptional() @IsBoolean() membreOng?: boolean;
   @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT', 'VOLONTAIRE']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
   @IsOptional() @IsIn(['Entretien', 'Podium', 'Formateur Académie', 'Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Entretien' | 'Podium' | 'Formateur Académie' | 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';
@@ -43,6 +44,7 @@ class UpdateParticipantDto {
   @IsOptional() @IsString() profession?: string;
   @IsOptional() @IsString() adresse?: string;
   @IsOptional() @IsString() contact?: string;
+  @IsOptional() @IsString() source?: string;
   @IsOptional() @IsBoolean() membreOng?: boolean;
   @IsOptional() @IsIn(['PARTICIPANT', 'STAFF', 'ENSEIGNANT', 'VOLONTAIRE']) typeParticipant?: 'PARTICIPANT' | 'STAFF' | 'ENSEIGNANT' | 'VOLONTAIRE';
   @IsOptional() @IsIn(['Entretien', 'Podium', 'Formateur Académie', 'Media', 'Cuisine', 'Accueil', 'Sécurité', 'Prestations', 'Inscription', 'Organisateurs']) typeStaff?: 'Entretien' | 'Podium' | 'Formateur Académie' | 'Media' | 'Cuisine' | 'Accueil' | 'Sécurité' | 'Prestations' | 'Inscription' | 'Organisateurs';

@@ -81,6 +81,7 @@ model Participant {
   profession       String?
   adresse          String?
   contact          String?
+  source           String?
   membreOng        Boolean?          @default(false)
   typeParticipant  TypeParticipant   @default(PARTICIPANT)
   typeStaff        String?
