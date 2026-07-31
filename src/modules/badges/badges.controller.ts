@@ -27,7 +27,10 @@ export class BadgesController {
   }
 
   @Post('anonymes/generer')
-  genererAnonymes(@Req() req: any, @Body() body: { enseignants?: number; staff?: number; participants?: number; volontaires?: number }) {
+  genererAnonymes(
+    @Req() req: any,
+    @Body() body: { enseignants?: number; staff?: number; participants?: number; volontaires?: number; localiteId?: string },
+  ) {
     return this.badgesService.genererBadgesAnonymes(req.user.id, body);
   }
 }

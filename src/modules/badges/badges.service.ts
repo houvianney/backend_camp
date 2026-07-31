@@ -85,7 +85,7 @@ export class BadgesService {
     return this.genererImageQr(badge.qrCode);
   }
 
-  async genererBadgesAnonymes(adminId: string, payload: { enseignants?: number; staff?: number; participants?: number; volontaires?: number }) {
+  async genererBadgesAnonymes(adminId: string, payload: { enseignants?: number; staff?: number; participants?: number; volontaires?: number; localiteId?: string }) {
     const enseignants = Math.max(0, Number(payload.enseignants || 0));
     const staff = Math.max(0, Number(payload.staff || 0));
     const participants = Math.max(0, Number(payload.participants || 0));
@@ -95,7 +95,7 @@ export class BadgesService {
       throw new BadRequestException('Sélectionnez au moins un badge à générer');
     }
 
-    const localite = await this.prisma.localite.findFirst();
+    const localite = payload.localiteId ? await this.prisma.localite.findUnique({ where: { id: payload.localiteId } }) : await this.prisma.localite.findFirst();
     if (!localite) {
       throw new BadRequestException('Aucune localité n’est disponible pour créer les badges anonymes');
     }

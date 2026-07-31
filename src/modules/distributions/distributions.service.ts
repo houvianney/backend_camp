@@ -92,6 +92,20 @@ export class DistributionsService {
       throw new BadRequestException('Cette ressource ne correspond pas au type de contrôle de ce compte');
     }
 
+    // Si la ressource est de type NOURRITURE, vérifier que la présence a déjà été marquée
+    if (ressource.type === 'NOURRITURE') {
+      const presenceDistribution = await this.prisma.distribution.findFirst({
+        where: {
+          participantId,
+          ressource: { type: 'PRESENCE' },
+        },
+      });
+      if (!presenceDistribution) {
+        this.logger.warn(`[VALIDATE] rejected controllerId=${controleurId} participantId=${participantId} ressourceId=${ressourceId} reason=presence_required`);
+        throw new BadRequestException("Présence non marquée : redirigez d'abord le participant vers le contrôle de présence");
+      }
+    }
+
     try {
       const distribution = await this.prisma.distribution.create({
         data: { participantId, ressourceId, controleurId },

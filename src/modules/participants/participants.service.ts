@@ -95,15 +95,24 @@ export class ParticipantsService {
     if (!participant) throw new NotFoundException('Participant introuvable');
 
     const responsable = await this.prisma.user.findUnique({ where: { id: responsableId } });
-    if (participant.localiteId !== responsable?.localiteId) {
-      throw new ForbiddenException("Ce participant n'appartient pas à votre localité");
-    }
-    if (participant.statut !== 'EN_ATTENTE') {
-      throw new BadRequestException('Ce participant est déjà validé, modification impossible');
+    if (!responsable) throw new ForbiddenException('Compte invalide');
+
+    // If caller is RESPONSABLE, enforce localite match and only allow modifications while EN_ATTENTE
+    if (responsable.role === 'RESPONSABLE') {
+      if (participant.localiteId !== responsable.localiteId) {
+        throw new ForbiddenException("Ce participant n'appartient pas à votre localité");
+      }
+      if (participant.statut !== 'EN_ATTENTE') {
+        throw new BadRequestException('Ce participant est déjà validé, modification impossible');
+      }
     }
 
     const montantActuel = Number(participant.montantPaye || 0);
     const nouveauMontant = montantActuel + montantAjoute;
+
+    if (nouveauMontant > 20000) {
+      throw new BadRequestException('Le montant total ne peut pas dépasser 20 000 FCFA');
+    }
 
     return this.prisma.participant.update({
       where: { id: participantId },

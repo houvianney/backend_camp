@@ -69,7 +69,7 @@ export class ParticipantsController {
   }
 
   @Patch(':id/montant')
-  @Roles(Role.RESPONSABLE)
+  @Roles(Role.RESPONSABLE, Role.ADMIN)
   updateMontant(@Param('id') id: string, @Body() dto: UpdateMontantDto, @Req() req: any) {
     return this.participantsService.mettreAJourMontant(req.user.id, id, dto.montantAjoute);
   }
