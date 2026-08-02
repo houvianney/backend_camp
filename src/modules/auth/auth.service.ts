@@ -74,6 +74,7 @@ export class AuthService {
       where: { id: userId },
       data: {
         passwordHash,
+        passwordPlain: newPassword,
         passwordMustChange: false,
       },
     });

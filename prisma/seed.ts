@@ -14,6 +14,7 @@ async function main() {
       prenom: 'Administrateur',
       email: 'admin@evenement.local',
       passwordHash,
+      passwordPlain: 'ChangeMoi123!',
       role: Role.ADMIN,
     },
   });
