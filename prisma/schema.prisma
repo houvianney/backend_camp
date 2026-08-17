@@ -102,6 +102,7 @@ model Participant {
   valideAt    DateTime?
 
   createdAt DateTime @default(now())
+  anonymousNumber Int? @unique
 
   badges        Badge[]
   distributions Distribution[]

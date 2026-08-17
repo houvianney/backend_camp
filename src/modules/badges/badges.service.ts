@@ -100,7 +100,7 @@ export class BadgesService {
       throw new BadRequestException('Aucune localité n’est disponible pour créer les badges anonymes');
     }
 
-    const created: Array<{ id: string; typeParticipant: string; code: string; qrDataUrl: string }> = [];
+    const created: Array<{ id: string; typeParticipant: string; code: string; qrDataUrl: string; anonymousNumber?: number }> = [];
 
     const batches = [
       { type: 'ENSEIGNANT', count: enseignants },
@@ -111,6 +111,26 @@ export class BadgesService {
 
     for (const batch of batches) {
       for (let index = 0; index < batch.count; index += 1) {
+        // Compute next available anonymous number (1..9999)
+        let nextNumber = 1;
+        const maxItem = await this.prisma.participant.findFirst({
+          where: { anonymousNumber: { not: null } },
+          orderBy: { anonymousNumber: 'desc' },
+          select: { anonymousNumber: true },
+        });
+        if (maxItem && typeof maxItem.anonymousNumber === 'number') {
+          nextNumber = (maxItem.anonymousNumber % 9999) + 1;
+        }
+
+        // ensure uniqueness by probing until an unused number is found (rare loops)
+        let attempts = 0;
+        while (attempts < 10000) {
+          const exists = await this.prisma.participant.findFirst({ where: { anonymousNumber: nextNumber } });
+          if (!exists) break;
+          nextNumber = (nextNumber % 9999) + 1;
+          attempts += 1;
+        }
+
         const participant = await this.prisma.participant.create({
           data: {
             nom: '',
@@ -122,6 +142,7 @@ export class BadgesService {
             inscritParId: adminId,
             valideParId: adminId,
             valideAt: new Date(),
+            anonymousNumber: nextNumber,
           },
         });
 
@@ -131,6 +152,7 @@ export class BadgesService {
           typeParticipant: batch.type,
           code: `ANON-${batch.type.substring(0, 3)}-${String(index + 1).padStart(2, '0')}`,
           qrDataUrl: await this.genererImageQr(badge.qrCode),
+          anonymousNumber: nextNumber,
         });
       }
     }
