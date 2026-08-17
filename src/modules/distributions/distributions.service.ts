@@ -38,7 +38,7 @@ export class DistributionsService {
 
     // Ressources pertinentes pour le type de ce contrôleur (ex: tous les créneaux repas)
     const ressources = await this.prisma.ressource.findMany({
-      where: { type: controleur.controleType! },
+      where: { type: controleur.controleType!, visible: true },
       orderBy: [{ jour: 'asc' }, { creneau: 'asc' }],
     });
 

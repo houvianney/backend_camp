@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -14,6 +14,15 @@ class CreateRessourceDto {
   @IsOptional() @IsString() creneau?: string;
 }
 
+class UpdateRessourceDto {
+  @IsOptional() @IsString() code?: string;
+  @IsOptional() @IsString() libelle?: string;
+  @IsOptional() @IsEnum(ControleType) type?: ControleType;
+  @IsOptional() @IsInt() @Min(1) jour?: number | null;
+  @IsOptional() @IsString() creneau?: string | null;
+  @IsOptional() visible?: boolean;
+}
+
 @Controller('ressources')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RessourcesController {
@@ -26,8 +35,9 @@ export class RessourcesController {
   }
 
   @Get()
-  findAll(@Query('type') type?: ControleType) {
-    return this.ressourcesService.findAll(type);
+  findAll(@Query('type') type?: ControleType, @Query('visible') visible?: string) {
+    const visibleBool = visible === undefined ? undefined : visible === 'true';
+    return this.ressourcesService.findAll(type, visibleBool);
   }
 
   @Get('stats')
@@ -46,5 +56,11 @@ export class RessourcesController {
   @Roles(Role.ADMIN)
   delete(@Param('id') id: string) {
     return this.ressourcesService.delete(id);
+  }
+
+  @Patch(':id')
+  @Roles(Role.ADMIN)
+  update(@Param('id') id: string, @Body() dto: UpdateRessourceDto) {
+    return this.ressourcesService.update(id, dto as any);
   }
 }

@@ -23,12 +23,16 @@ async function main() {
   const ressources = [
     { code: 'presence', libelle: 'Presence sur le lieu', type: ControleType.PRESENCE },
     { code: 'tshirt', libelle: 'T-shirt evenement', type: ControleType.TSHIRT },
-    { code: 'repas_j1_matin', libelle: 'Repas Jour 1 - Matin', jour: 1, creneau: 'matin', type: ControleType.NOURRITURE },
-    { code: 'repas_j1_midi', libelle: 'Repas Jour 1 - Midi', jour: 1, creneau: 'midi', type: ControleType.NOURRITURE },
     { code: 'repas_j1_soir', libelle: 'Repas Jour 1 - Soir', jour: 1, creneau: 'soir', type: ControleType.NOURRITURE },
     { code: 'repas_j2_matin', libelle: 'Repas Jour 2 - Matin', jour: 2, creneau: 'matin', type: ControleType.NOURRITURE },
     { code: 'repas_j2_midi', libelle: 'Repas Jour 2 - Midi', jour: 2, creneau: 'midi', type: ControleType.NOURRITURE },
-    { code: 'repas_j2_soir', libelle: 'Repas Jour 2 - Soir', jour: 2, creneau: 'soir', type: ControleType.NOURRITURE },
+    { code: 'repas_j3_soir', libelle: 'Repas Jour 3 - Soir', jour: 3, creneau: 'soir', type: ControleType.NOURRITURE },
+    { code: 'repas_j3_matin', libelle: 'Repas Jour 3 - Matin', jour: 3, creneau: 'matin', type: ControleType.NOURRITURE },
+    { code: 'repas_j3_midi', libelle: 'Repas Jour 3 - Midi', jour: 3, creneau: 'midi', type: ControleType.NOURRITURE },
+    { code: 'repas_j3_soir', libelle: 'Repas Jour 3 - Soir', jour: 3, creneau: 'soir', type: ControleType.NOURRITURE },
+    { code: 'repas_j4_matin', libelle: 'Repas Jour 4 - Matin', jour: 4, creneau: 'matin', type: ControleType.NOURRITURE },
+    { code: 'repas_j4_midi', libelle: 'Repas Jour 4 - Midi', jour: 4, creneau: 'midi', type: ControleType.NOURRITURE },
+    { code: 'repas_j4_soir', libelle: 'Repas Jour 4 - Soir', jour: 4, creneau: 'soir', type: ControleType.NOURRITURE },
   ];
 
   for (const r of ressources) {

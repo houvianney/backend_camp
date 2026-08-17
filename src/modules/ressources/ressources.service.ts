@@ -6,15 +6,23 @@ import { ControleType } from '../../common/enums/role.enum';
 export class RessourcesService {
   constructor(private prisma: PrismaService) {}
 
-  create(data: { code: string; type: ControleType; libelle: string; jour?: number; creneau?: string }) {
-    return this.prisma.ressource.create({ data });
+  create(data: { code: string; type: ControleType; libelle: string; jour?: number; creneau?: string; visible?: boolean }) {
+    const { visible, ...rest } = data as any;
+    return this.prisma.ressource.create({ data: { ...rest, visible: visible ?? true } });
   }
 
-  findAll(type?: ControleType) {
+  findAll(type?: ControleType, visible?: boolean) {
+    const where: any = {};
+    if (type) where.type = type;
+    if (typeof visible === 'boolean') where.visible = visible;
     return this.prisma.ressource.findMany({
-      where: { type },
+      where,
       orderBy: [{ jour: 'asc' }, { creneau: 'asc' }],
     });
+  }
+
+  update(id: string, data: { libelle?: string; code?: string; type?: ControleType; jour?: number | null; creneau?: string | null; visible?: boolean }) {
+    return this.prisma.ressource.update({ where: { id }, data });
   }
 
   /** Statistiques de distribution par ressource, pour le dashboard admin temps réel */

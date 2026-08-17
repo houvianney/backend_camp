@@ -129,6 +129,7 @@ model Ressource {
   code    String       @unique
   libelle String
   type    ControleType
+  visible Boolean      @default(true)
   jour    Int?
   creneau String?
 
