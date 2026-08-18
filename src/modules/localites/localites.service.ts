@@ -24,6 +24,9 @@ export class LocalitesService {
       const enseignantCount = participants.filter((p) => p.typeParticipant === 'ENSEIGNANT').length;
       const staffCount = participants.filter((p) => p.typeParticipant === 'STAFF').length;
       const volontaireCount = participants.filter((p) => p.typeParticipant === 'VOLONTAIRE').length;
+      const montantVolontaires = participants
+        .filter((p) => p.typeParticipant === 'VOLONTAIRE')
+        .reduce((sum, p) => sum + Number(p.montantPaye), 0);
 
       return {
         id: l.id,
@@ -37,6 +40,7 @@ export class LocalitesService {
         valides: participants.filter((p) => p.statut === 'VALIDE').length,
         enAttente: participants.filter((p) => p.statut === 'EN_ATTENTE').length,
         montantCollecte: participants.reduce((sum, p) => sum + Number(p.montantPaye), 0),
+        montantVolontaire: montantVolontaires,
       };
     });
 
@@ -59,11 +63,7 @@ export class LocalitesService {
       },
     );
 
-    const montantVolontaires = rows.reduce((sum, row) => sum + row.montantCollecte * 0, 0);
-    const montantVolontairesReel = rows.reduce((sum, row) => {
-      const volunteersInRow = row.volontaireCount;
-      return sum + (volunteersInRow > 0 ? row.montantCollecte : 0);
-    }, 0);
+    const montantVolontairesReel = rows.reduce((sum, row) => sum + Number(row.montantVolontaire || 0), 0);
 
     return [
       ...rows,
